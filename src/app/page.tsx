@@ -28,16 +28,30 @@ const initialImages = [
 export default function Home() {
   const [characters, updateCharacters] = useState(initialImages);
 
-  const dragSection = useRef<number>(0);
-  const draggedOverSection = useRef<number>(0);
+  const dragSection = useRef<number | null>(null);
+  const draggedOverSection = useRef<number | null>(null);
+
+  function handleDragStart(index: number) {
+    dragSection.current = index;
+  }
+
+  function handleDragEnter(index: number) {
+    if (dragSection.current !== null) {
+      draggedOverSection.current = index;
+    }
+  }
 
   function handleSort() {
-    const charactersClone = [...characters];
-    const temp = charactersClone[dragSection.current];
-    charactersClone[dragSection.current] =
-      charactersClone[draggedOverSection.current];
-    charactersClone[draggedOverSection.current] = temp;
-    updateCharacters(charactersClone);
+    if (dragSection.current !== null && draggedOverSection.current !== null) {
+      const charactersClone = [...characters];
+      const temp = charactersClone[dragSection.current];
+      charactersClone[dragSection.current] =
+        charactersClone[draggedOverSection.current];
+      charactersClone[draggedOverSection.current] = temp;
+      updateCharacters(charactersClone);
+      dragSection.current = null;
+      draggedOverSection.current = null;
+    }
   }
 
   return (
@@ -48,10 +62,12 @@ export default function Home() {
           className="relative flex space-x-3 border rounded p-2 bg-gray-100"
           key={id}
           draggable
-          onDragStart={() => (dragSection.current = index)}
-          onDragEnter={() => (draggedOverSection.current = index)}
+          onDragStart={() => handleDragStart(index)}
+          onDragEnter={() => handleDragEnter(index)}
           onDragEnd={handleSort}
-          onDragOver={(e) => e.preventDefault()}
+          onTouchStart={() => handleDragStart(index)}
+          onTouchMove={() => handleDragEnter(index)}
+          onTouchEnd={handleSort}
         >
           <Image width={100} height={100} src={src} alt={tag} />
           <p>{tag}</p>
